@@ -334,10 +334,17 @@ mod tests {
             ])
         );
 
-        assert_eq!(parse_keywords()
-                    .parse("size=10931 time=1769203027.452198079 \
-                                                              sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
-                    .into_result(), Ok(vec![Keyword::Size(10931), Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()), Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())]));
+        assert_eq!(
+            parse_keywords()
+                .parse("size=10931 time=1769203027.452198079 \
+                                sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
+                .into_result(),
+            Ok(vec![
+                Keyword::Size(10931),
+                Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
+                Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())
+            ])
+        );
     }
 
     #[test]
@@ -375,18 +382,51 @@ mod tests {
         );
 
         assert_eq!(
-                    parse_entry()
-                        .parse("    LICENSE     size=10931 time=1769203027.452198079 \
-                                    sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
-                        .into_result(),
-                    Ok(Entry {
-                        path: PathBuf::from("LICENSE"),
-                        keywords: vec![
-                            Keyword::Size(10931),
-                            Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
-                            Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())
-                        ]
-                    })
-                );
+            parse_entry()
+                .parse("    LICENSE     size=10931 time=1769203027.452198079 \
+                            sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
+                .into_result(),
+            Ok(Entry {
+                path: PathBuf::from("LICENSE"),
+                keywords: vec![
+                    Keyword::Size(10931),
+                    Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
+                    Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())
+                ]
+            })
+        );
     }
 }
+
+// // fn parse<'a>() -> impl Parser<'a, &'a str, Vec<Entry>> {
+// // todo!()
+// // let keywords = keyword
+// //     .separated_by(text::whitespace())
+// //     .collect::<Vec<Keyword>>();
+
+// // let command = just('/').then(text::whitespace()).then(keywords);
+
+// // let file_name = text::ascii::ident().to_slice();
+
+// // // Example:
+// // // ```
+// // //     config      size=137 time=1769626398.992169554
+// // // ```
+// // let file_entry = file_name
+// //     .padded()
+// //     .then_ignore(text::whitespace())
+// //     .then(keywords)
+// //     .map(|(name, keywords): (String, Vec<Keyword>)| {});
+
+// // // Example:
+// // ```
+// // # ./.git
+// // .git            type=dir size=384 time=1769640373.412526597
+// //     COMMIT_EDITMSG \
+// //                 size=365 time=1769640373.411006676
+// //     HEAD        size=21 time=1769626398.993045847
+// //     config      size=137 time=1769626398.992169554
+// //     description size=73 time=1769626398.987281092
+// //     index       size=7790 time=1769640373.409695845
+// // ```
+// // }
