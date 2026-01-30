@@ -14,6 +14,7 @@ pub enum Keyword {
     Link(String),
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Type {
     Block,
     Char,
@@ -29,6 +30,33 @@ pub enum Command {
     Unset,
 }
 
+pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type> {
+    choice((
+        just("block").to(Type::Block),
+        just("char").to(Type::Char),
+        just("dir").to(Type::Dir),
+        just("fifo").to(Type::Fifo),
+        just("file").to(Type::File),
+        just("link").to(Type::Link),
+        just("socket").to(Type::Socket),
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_type() {
+        assert_eq!(parse_type().parse("block").into_result(), Ok(Type::Block));
+        assert_eq!(parse_type().parse("char").into_result(), Ok(Type::Char));
+        assert_eq!(parse_type().parse("dir").into_result(), Ok(Type::Dir));
+        assert_eq!(parse_type().parse("fifo").into_result(), Ok(Type::Fifo));
+        assert_eq!(parse_type().parse("file").into_result(), Ok(Type::File));
+        assert_eq!(parse_type().parse("link").into_result(), Ok(Type::Link));
+        assert_eq!(parse_type().parse("socket").into_result(), Ok(Type::Socket));
+    }
+}
 // fn parse_keyword<'a>() -> impl Parser<'a, &'a str, Keyword> {
 
 // }
