@@ -3,8 +3,10 @@ use std::path::PathBuf;
 use chrono::{DateTime, Utc};
 use chumsky::prelude::*;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
-    pub path: String,
+    pub path: PathBuf,
+    pub keywords: Vec<Keyword>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -128,6 +130,15 @@ pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
     just('/')
         .ignore_then(choice((unset, set)))
         .then_ignore(end()) // <- not sure if this is needed, it may even break stuff
+}
+
+pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
+    let path = parse_path();
+    let keywords = parse_keywords();
+
+    path.then_ignore(text::whitespace())
+        .then(keywords)
+        .map(|(path, keywords)| Entry { path, keywords })
 }
 
 #[cfg(test)]
@@ -340,5 +351,36 @@ mod tests {
             parse_command().parse("/unset").into_result(),
             Ok(Command::Unset)
         );
+    }
+
+    #[test]
+    fn test_parse_entry() {
+        assert_eq!(
+            parse_entry()
+                .parse("    LICENSE     size=10931 time=1769203027.452198079")
+                .into_result(),
+            Ok(Entry {
+                path: PathBuf::from("LICENSE"),
+                keywords: vec![
+                    Keyword::Size(10931),
+                    Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap())
+                ]
+            })
+        );
+
+        assert_eq!(
+                    parse_entry()
+                        .parse("    LICENSE     size=10931 time=1769203027.452198079 \
+                                    sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
+                        .into_result(),
+                    Ok(Entry {
+                        path: PathBuf::from("LICENSE"),
+                        keywords: vec![
+                            Keyword::Size(10931),
+                            Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
+                            Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())
+                        ]
+                    })
+                );
     }
 }
