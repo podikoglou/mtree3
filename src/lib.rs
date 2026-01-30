@@ -113,6 +113,9 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
     ))
 }
 
+pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>> {
+    parse_keyword().separated_by(text::whitespace()).collect()
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -271,6 +274,38 @@ mod tests {
         assert_eq!(
             parse_keyword().parse("link=foo.bar").into_result(),
             Ok(Keyword::Link(PathBuf::from("foo.bar")))
+        );
+    }
+
+    #[test]
+    fn test_parse_keywords() {
+        assert_eq!(parse_keywords().parse("").into_result(), Ok(vec![]));
+
+        assert_eq!(
+            parse_keywords().parse("type=dir").into_result(),
+            Ok(vec![Keyword::Type(Type::Dir),])
+        );
+
+        assert_eq!(
+            parse_keywords()
+                .parse("type=dir size=384 time=1769640373.412526597")
+                .into_result(),
+            Ok(vec![
+                Keyword::Type(Type::Dir),
+                Keyword::Size(384),
+                Keyword::Time(DateTime::from_timestamp(1769640373, 412526597).unwrap())
+            ])
+        );
+
+        assert_eq!(
+            parse_keywords()
+                .parse("type=link size=24 time=1769203307.589764008")
+                .into_result(),
+            Ok(vec![
+                Keyword::Type(Type::Link),
+                Keyword::Size(24),
+                Keyword::Time(DateTime::from_timestamp(1769203307, 589764008).unwrap())
+            ])
         );
     }
 }
