@@ -67,8 +67,9 @@ pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>> {
 }
 
 pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf> {
-    any()
+    none_of(" \t") // <-- NOTE: this will backfire
         .repeated()
+        .at_least(1)
         .to_slice()
         .validate(|x: &str, _, _| PathBuf::from(x))
 }
