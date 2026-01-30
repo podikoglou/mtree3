@@ -14,7 +14,7 @@ pub enum Keyword {
     Time(chrono::DateTime<Utc>),
     Size(u64),
     Sha256(String),
-    Link(String),
+    Link(PathBuf),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -83,6 +83,8 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
 
     let timestamp = parse_timestamp();
 
+    let path = parse_path();
+
     choice((
         just("type")
             .ignore_then(just("="))
@@ -106,8 +108,8 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
             .map(|sha256: &str| Keyword::Sha256(sha256.to_string())),
         just("link")
             .ignore_then(just("="))
-            .ignore_then(text::ident()) // <-- this is likely not right
-            .map(|sha256: &str| Keyword::Link(sha256.to_string())),
+            .ignore_then(path)
+            .map(|path: PathBuf| Keyword::Link(path)),
     ))
 }
 
@@ -260,15 +262,15 @@ mod tests {
     fn test_parse_link_keyword() {
         assert_eq!(
             parse_keyword().parse("link=../../foo.bar").into_result(),
-            Ok(Keyword::Link("../../foo.bar".to_string()))
+            Ok(Keyword::Link(PathBuf::from("../../foo.bar")))
         );
         assert_eq!(
             parse_keyword().parse("link=./foo.bar").into_result(),
-            Ok(Keyword::Link("./foo.bar".to_string()))
+            Ok(Keyword::Link(PathBuf::from("./foo.bar")))
         );
         assert_eq!(
             parse_keyword().parse("link=foo.bar").into_result(),
-            Ok(Keyword::Link("foo.bar".to_string()))
+            Ok(Keyword::Link(PathBuf::from("foo.bar")))
         );
     }
 }
