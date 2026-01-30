@@ -137,7 +137,7 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
     let path = parse_path();
     let keywords = parse_keywords();
 
-    path.then_ignore(text::whitespace())
+    path.padded()
         .then(keywords)
         .map(|(path, keywords)| Entry { path, keywords })
 }
