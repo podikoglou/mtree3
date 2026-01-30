@@ -28,6 +28,7 @@ pub enum Type {
     Socket,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Command {
     Set(Vec<Keyword>),
     Unset,
@@ -116,6 +117,19 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
 pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>> {
     parse_keyword().separated_by(text::whitespace()).collect()
 }
+
+pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
+    let unset = just("unset").to(Command::Unset);
+    let set = just("set")
+        .ignore_then(text::whitespace())
+        .ignore_then(parse_keywords())
+        .map(Command::Set);
+
+    just('/')
+        .ignore_then(choice((unset, set)))
+        .then_ignore(end()) // <- not sure if this is needed, it may even break stuff
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -306,6 +320,25 @@ mod tests {
                 Keyword::Size(24),
                 Keyword::Time(DateTime::from_timestamp(1769203307, 589764008).unwrap())
             ])
+        );
+    }
+
+    #[test]
+    fn test_commands() {
+        assert_eq!(
+            parse_command()
+                .parse("/set type=dir size=384 time=1769640373.412526597")
+                .into_result(),
+            Ok(Command::Set(vec![
+                Keyword::Type(Type::Dir),
+                Keyword::Size(384),
+                Keyword::Time(DateTime::from_timestamp(1769640373, 412526597).unwrap())
+            ]))
+        );
+
+        assert_eq!(
+            parse_command().parse("/unset").into_result(),
+            Ok(Command::Unset)
         );
     }
 }
