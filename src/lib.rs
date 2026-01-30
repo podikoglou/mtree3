@@ -91,7 +91,7 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
             .ignore_then(just("="))
             .ignore_then(number_u64)
             .map(|size| Keyword::Size(size)),
-        just("sha256")
+        choice((just("sha256digest"), just("sha256")))
             .ignore_then(just("="))
             .ignore_then(text::ident()) // <-- this may not be right
             .map(|sha256: &str| Keyword::Sha256(sha256.to_string())),
