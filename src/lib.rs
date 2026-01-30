@@ -333,6 +333,11 @@ mod tests {
                 Keyword::Time(DateTime::from_timestamp(1769203307, 589764008).unwrap())
             ])
         );
+
+        assert_eq!(parse_keywords()
+                    .parse("size=10931 time=1769203027.452198079 \
+                                                              sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
+                    .into_result(), Ok(vec![Keyword::Size(10931), Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()), Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())]));
     }
 
     #[test]
