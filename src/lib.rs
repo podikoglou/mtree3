@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use chrono::{DateTime, Utc};
 use chumsky::prelude::*;
 
@@ -59,6 +61,13 @@ pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>> {
         .try_map(|(secs, nsecs), _| {
             DateTime::from_timestamp(secs, nsecs).ok_or(EmptyErr::default())
         })
+}
+
+pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf> {
+    any()
+        .repeated()
+        .to_slice()
+        .validate(|x: &str, _, _| PathBuf::from(x))
 }
 
 pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
@@ -128,6 +137,18 @@ mod tests {
                 .parse("1769640177.434772208")
                 .into_result(),
             Ok(DateTime::from_timestamp(1769640177, 434772208).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_parse_path() {
+        assert_eq!(
+            parse_path().parse("foo.bar").into_result(),
+            Ok(PathBuf::from("foo.bar"))
+        );
+        assert_eq!(
+            parse_path().parse("../../foo.bar").into_result(),
+            Ok(PathBuf::from("../../foo.bar"))
         );
     }
 
