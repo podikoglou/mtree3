@@ -1,5 +1,5 @@
-use chrono::Utc;
-use chumsky::{prelude::*, text::whitespace};
+use chrono::{DateTime, Utc};
+use chumsky::prelude::*;
 
 pub struct Entry {
     pub path: String,
@@ -42,6 +42,24 @@ pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type> {
     ))
 }
 
+pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>> {
+    // TODO: do we reeeally need to handle negatives?
+    let number_i64 = text::int::<_, extra::Err<EmptyErr>>(10)
+        .to_slice()
+        .try_map(|s: &str, _| s.parse::<i64>().map_err(|_| EmptyErr::default()));
+
+    let number_u32 = text::int::<_, extra::Err<EmptyErr>>(10)
+        .to_slice()
+        .try_map(|s: &str, _| s.parse::<u32>().map_err(|_| EmptyErr::default()));
+
+    number_i64
+        .then_ignore(just('.'))
+        .then(number_u32)
+        .try_map(|(secs, nsecs), _| {
+            DateTime::from_timestamp(secs, nsecs).ok_or(EmptyErr::default())
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -55,6 +73,20 @@ mod tests {
         assert_eq!(parse_type().parse("file").into_result(), Ok(Type::File));
         assert_eq!(parse_type().parse("link").into_result(), Ok(Type::Link));
         assert_eq!(parse_type().parse("socket").into_result(), Ok(Type::Socket));
+    }
+
+    #[test]
+    fn test_parse_timestamp() {
+        assert_eq!(
+            parse_timestamp().parse("1630456800.0").into_result(),
+            Ok(DateTime::from_timestamp(1630456800, 0).unwrap())
+        );
+        assert_eq!(
+            parse_timestamp()
+                .parse("1769640177.434772208")
+                .into_result(),
+            Ok(DateTime::from_timestamp(1769640177, 434772208).unwrap())
+        );
     }
 }
 // fn parse_keyword<'a>() -> impl Parser<'a, &'a str, Keyword> {
