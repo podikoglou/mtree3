@@ -149,7 +149,7 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
     let path = parse_path();
     let keywords = parse_keywords();
 
-    path.padded()
+    path.padded_by(whitespace_with_continuation())
         .then(keywords)
         .map(|(path, keywords)| Entry { path, keywords })
 }
