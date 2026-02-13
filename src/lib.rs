@@ -136,7 +136,7 @@ pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>> {
 pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
     let unset = just("unset").to(Command::Unset);
     let set = just("set")
-        .ignore_then(text::whitespace())
+        .ignore_then(whitespace_with_continuation())
         .ignore_then(parse_keywords())
         .map(Command::Set);
 
