@@ -117,8 +117,20 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
     ))
 }
 
+pub fn whitespace_with_continuation<'src>() -> impl Parser<'src, &'src str, ()> {
+    choice((
+        text::whitespace().map(|_| ()),
+        just('\\')
+            .then(text::newline())
+            .then(text::whitespace().or_not())
+            .map(|_| ()),
+    ))
+}
+
 pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>> {
-    parse_keyword().separated_by(text::whitespace()).collect()
+    parse_keyword()
+        .separated_by(whitespace_with_continuation())
+        .collect()
 }
 
 pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
