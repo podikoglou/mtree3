@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use chrono::{DateTime, Utc};
 use chumsky::prelude::*;
+use jiff::Timestamp;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
@@ -13,7 +13,7 @@ pub struct Entry {
 pub enum Keyword {
     Type(Type),
     Uid(u32),
-    Time(chrono::DateTime<Utc>),
+    Time(Timestamp),
     Size(u64),
     Sha256(String),
     Link(PathBuf),
@@ -51,19 +51,30 @@ pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type, ParserError<'src
     .labelled("type")
 }
 
-pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>, ParserError<'src>> {
-    // TODO: do we reeeally need to handle negatives?
-    let number_i64 = text::int(10).map(|s: &str| s.parse::<i64>().unwrap());
-    let number_u32 = text::int(10).map(|s: &str| s.parse::<u32>().unwrap());
+pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, Timestamp, ParserError<'src>> {
+    // NOTE: do we need to handle - for the first number? (since it's an i64)
+    // let number = just('0').repeated().or_not().then(text::int(10)).to_slice();
 
-    number_i64
-        .then_ignore(just('.'))
-        .then(number_u32)
-        .try_map(|(secs, nsecs), span: SimpleSpan| {
-            DateTime::from_timestamp(secs, nsecs)
-                .ok_or_else(|| Rich::custom(span, "Can't parse timestamp"))
+    let number = choice((
+        // example: 1111
+        text::int(10).repeated().to_slice(),
+        // example: 0
+        just('0').to_slice(),
+        // example: 01111
+        just('0')
+            .to_slice()
+            .then(text::int(10).repeated().to_slice())
+            .to_slice(),
+    ));
+
+    number
+        .then(just('.'))
+        .then(number)
+        .to_slice()
+        .try_map(|str: &str, span: SimpleSpan| {
+            Timestamp::strptime("%s.%f", str)
+                .map_err(|err| Rich::custom(span, format!("Can't parse timestamp: {}", err)))
         })
-        .labelled("timestamp")
 }
 
 pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf, ParserError<'src>> {
@@ -187,11 +198,15 @@ mod tests {
 
         assert_eq!(
             parse("1630456800.0"),
-            Ok(DateTime::from_timestamp(1630456800, 0).unwrap())
+            Ok(Timestamp::strptime("%s.%f", "1630456800.0").unwrap())
+        );
+        assert_eq!(
+            parse("1630456800.01"),
+            Ok(Timestamp::strptime("%s.%f", "1630456800.01").unwrap())
         );
         assert_eq!(
             parse("1769640177.434772208"),
-            Ok(DateTime::from_timestamp(1769640177, 434772208).unwrap())
+            Ok(Timestamp::strptime("%s.%f", "1769640177.434772208").unwrap())
         );
     }
 
@@ -234,15 +249,11 @@ mod tests {
 
         assert_eq!(
             parse("time=1630456800.0"),
-            Ok(Keyword::Time(
-                DateTime::from_timestamp(1630456800, 0).unwrap()
-            ))
+            Ok(Keyword::Time(Timestamp::strptime("%s.%f", "1630456800.0").unwrap()))
         );
         assert_eq!(
             parse("time=1769640177.434772208"),
-            Ok(Keyword::Time(
-                DateTime::from_timestamp(1769640177, 434772208).unwrap()
-            ))
+            Ok(Keyword::Time(Timestamp::strptime("%s.%f", "1769640177.434772208").unwrap()))
         );
     }
 
@@ -304,7 +315,7 @@ mod tests {
             Ok(vec![
                 Keyword::Type(Type::Dir),
                 Keyword::Size(384),
-                Keyword::Time(DateTime::from_timestamp(1769640373, 412526597).unwrap())
+                Keyword::Time(Timestamp::strptime("%s.%f", "1769640373.412526597").unwrap())
             ])
         );
 
@@ -313,7 +324,7 @@ mod tests {
             Ok(vec![
                 Keyword::Type(Type::Link),
                 Keyword::Size(24),
-                Keyword::Time(DateTime::from_timestamp(1769203307, 589764008).unwrap())
+                Keyword::Time(Timestamp::strptime("%s.%f", "1769203307.589764008").unwrap())
             ])
         );
 
@@ -324,7 +335,7 @@ mod tests {
             ),
             Ok(vec![
                 Keyword::Size(10931),
-                Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
+                Keyword::Time(Timestamp::strptime("%s.%f", "1769203027.452198079").unwrap()),
                 Keyword::Sha256(
                     "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string()
                 )
@@ -341,7 +352,7 @@ mod tests {
             Ok(Command::Set(vec![
                 Keyword::Type(Type::Dir),
                 Keyword::Size(384),
-                Keyword::Time(DateTime::from_timestamp(1769640373, 412526597).unwrap())
+                Keyword::Time(Timestamp::strptime("%s.%f", "1769640373.412526597").unwrap())
             ]))
         );
 
@@ -367,7 +378,7 @@ mod tests {
                 path: PathBuf::from("LICENSE"),
                 keywords: vec![
                     Keyword::Size(10931),
-                    Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap())
+                    Keyword::Time(Timestamp::strptime("%s.%f", "1769203027.452198079").unwrap())
                 ]
             })
         );
@@ -381,7 +392,7 @@ mod tests {
                 path: PathBuf::from("LICENSE"),
                 keywords: vec![
                     Keyword::Size(10931),
-                    Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
+                    Keyword::Time(Timestamp::strptime("%s.%f", "1769203027.452198079").unwrap()),
                     Keyword::Sha256(
                         "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
                             .to_string()
@@ -411,35 +422,35 @@ mod tests {
                     keywords: vec![
                         Keyword::Type(Type::Dir),
                         Keyword::Size(320),
-                        Keyword::Time(DateTime::from_timestamp(1771023429, 226137224).unwrap())
+                        Keyword::Time(Timestamp::strptime("%s.%f", "1771023429.226137224").unwrap())
                     ]
                 },
                 Entry {
                     path: PathBuf::from(".gitignore"),
                     keywords: vec![
                         Keyword::Size(8),
-                        Keyword::Time(DateTime::from_timestamp(1769725259, 452161299).unwrap())
+                        Keyword::Time(Timestamp::strptime("%s.%f", "1769725259.452161299").unwrap())
                     ]
                 },
                 Entry {
                     path: PathBuf::from("Cargo.lock"),
                     keywords: vec![
                         Keyword::Size(13637),
-                        Keyword::Time(DateTime::from_timestamp(1769728676, 6587414).unwrap())
+                        Keyword::Time(Timestamp::strptime("%s.%f", "1769728676.006587414").unwrap())
                     ]
                 },
                 Entry {
                     path: PathBuf::from("Cargo.toml"),
                     keywords: vec![
                         Keyword::Size(114),
-                        Keyword::Time(DateTime::from_timestamp(1769728674, 520418961).unwrap())
+                        Keyword::Time(Timestamp::strptime("%s.%f", "1769728674.520418961").unwrap())
                     ]
                 },
                 Entry {
                     path: PathBuf::from("LICENSE"),
                     keywords: vec![
                         Keyword::Size(1066),
-                        Keyword::Time(DateTime::from_timestamp(1769784305, 767405992).unwrap()),
+                        Keyword::Time(Timestamp::strptime("%s.%f", "1769784305.767405992").unwrap()),
                         Keyword::Sha256(
                             "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
                                 .to_string()
@@ -450,7 +461,7 @@ mod tests {
                     path: PathBuf::from("README.md"),
                     keywords: vec![
                         Keyword::Size(177),
-                        Keyword::Time(DateTime::from_timestamp(1769783557, 896055811).unwrap())
+                        Keyword::Time(Timestamp::strptime("%s.%f", "1769783557.896055811").unwrap())
                     ]
                 }
             ])
