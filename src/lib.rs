@@ -50,13 +50,8 @@ pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type> {
 
 pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>> {
     // TODO: do we reeeally need to handle negatives?
-    let number_i64 = text::int::<_, extra::Err<EmptyErr>>(10)
-        .to_slice()
-        .try_map(|s: &str, _| s.parse::<i64>().map_err(|_| EmptyErr::default()));
-
-    let number_u32 = text::int::<_, extra::Err<EmptyErr>>(10)
-        .to_slice()
-        .try_map(|s: &str, _| s.parse::<u32>().map_err(|_| EmptyErr::default()));
+    let number_i64 = text::int(10).map(|s: &str| s.parse::<i64>().unwrap());
+    let number_u32 = text::int(10).map(|s: &str| s.parse::<u32>().unwrap());
 
     number_i64
         .then_ignore(just('.'))
@@ -84,13 +79,8 @@ fn keyword_parser<'src, V>(
 pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
     let type_value = parse_type();
 
-    let number_u32 = text::int::<_, extra::Err<EmptyErr>>(10)
-        .to_slice()
-        .try_map(|s: &str, _| s.parse::<u32>().map_err(|_| EmptyErr::default()));
-
-    let number_u64 = text::int::<_, extra::Err<EmptyErr>>(10)
-        .to_slice()
-        .try_map(|s: &str, _| s.parse::<u64>().map_err(|_| EmptyErr::default()));
+    let number_u32 = text::int(10).map(|s: &str| s.parse::<u32>().unwrap());
+    let number_u64 = text::int(10).map(|s: &str| s.parse::<u64>().unwrap());
 
     let timestamp = parse_timestamp();
 
