@@ -36,7 +36,9 @@ pub enum Command {
     Unset,
 }
 
-pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type> {
+pub type ParserError<'src> = extra::Err<Rich<'src, char>>;
+
+pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type, ParserError<'src>> {
     choice((
         just("block").to(Type::Block),
         just("char").to(Type::Char),
@@ -48,7 +50,7 @@ pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type> {
     ))
 }
 
-pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>> {
+pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>, ParserError<'src>> {
     // TODO: do we reeeally need to handle negatives?
     let number_i64 = text::int(10).map(|s: &str| s.parse::<i64>().unwrap());
     let number_u32 = text::int(10).map(|s: &str| s.parse::<u32>().unwrap());
@@ -56,12 +58,13 @@ pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>> {
     number_i64
         .then_ignore(just('.'))
         .then(number_u32)
-        .try_map(|(secs, nsecs), _| {
-            DateTime::from_timestamp(secs, nsecs).ok_or(EmptyErr::default())
+        .try_map(|(secs, nsecs), span: SimpleSpan| {
+            DateTime::from_timestamp(secs, nsecs)
+                .ok_or_else(|| Rich::custom(span, "Can't parse timestamp"))
         })
 }
 
-pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf> {
+pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf, ParserError<'src>> {
     none_of(" \t") // <-- NOTE: this will backfire
         .repeated()
         .at_least(1)
@@ -70,13 +73,13 @@ pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf> {
 }
 
 fn keyword_parser<'src, V>(
-    key: impl Parser<'src, &'src str, &'src str>,
-    value: impl Parser<'src, &'src str, V>,
-) -> impl Parser<'src, &'src str, V> {
+    key: impl Parser<'src, &'src str, &'src str, ParserError<'src>>,
+    value: impl Parser<'src, &'src str, V, ParserError<'src>>,
+) -> impl Parser<'src, &'src str, V, ParserError<'src>> {
     key.ignore_then(just('=')).ignore_then(value)
 }
 
-pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
+pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword, ParserError<'src>> {
     let type_value = parse_type();
 
     let number_u32 = text::int(10).map(|s: &str| s.parse::<u32>().unwrap());
@@ -102,7 +105,7 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
     ))
 }
 
-pub fn whitespace_with_continuation<'src>() -> impl Parser<'src, &'src str, ()> {
+pub fn whitespace_with_continuation<'src>() -> impl Parser<'src, &'src str, (), ParserError<'src>> {
     choice((
         text::whitespace().map(|_| ()),
         just('\\')
@@ -112,13 +115,13 @@ pub fn whitespace_with_continuation<'src>() -> impl Parser<'src, &'src str, ()> 
     ))
 }
 
-pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>> {
+pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>, ParserError<'src>> {
     parse_keyword()
         .separated_by(whitespace_with_continuation())
         .collect()
 }
 
-pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
+pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command, ParserError<'src>> {
     let unset = just("unset").to(Command::Unset);
     let set = just("set")
         .ignore_then(whitespace_with_continuation())
@@ -130,14 +133,14 @@ pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
         .then_ignore(end()) // <- not sure if this is needed, it may even break stuff
 }
 
-pub fn parse_comment<'src>() -> impl Parser<'src, &'src str, ()> {
+pub fn parse_comment<'src>() -> impl Parser<'src, &'src str, (), ParserError<'src>> {
     just('#')
         .ignore_then(any().repeated())
         .ignore_then(choice((text::newline().ignore_then(end()), end()))) // <-- this may or may not be totally useles
         .ignored()
 }
 
-pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
+pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry, ParserError<'src>> {
     let path = parse_path();
     let keywords = parse_keywords();
 
@@ -146,7 +149,7 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
         .map(|(path, keywords)| Entry { path, keywords })
 }
 
-pub fn parse_entries<'src>() -> impl Parser<'src, &'src str, Vec<Entry>> {
+pub fn parse_entries<'src>() -> impl Parser<'src, &'src str, Vec<Entry>, ParserError<'src>> {
     parse_entry()
         .separated_by(text::newline())
         .at_least(1)
