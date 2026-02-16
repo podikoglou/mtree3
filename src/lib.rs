@@ -140,6 +140,13 @@ pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command> {
         .then_ignore(end()) // <- not sure if this is needed, it may even break stuff
 }
 
+pub fn parse_comment<'src>() -> impl Parser<'src, &'src str, ()> {
+    just('#')
+        .ignore_then(any().repeated())
+        .ignore_then(choice((text::newline().ignore_then(end()), end()))) // <-- this may or may not be totally useles
+        .ignored()
+}
+
 pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
     let path = parse_path();
     let keywords = parse_keywords();
@@ -149,11 +156,6 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
         .map(|(path, keywords)| Entry { path, keywords })
 }
 
-pub fn parse_comment<'src>() -> impl Parser<'src, &'src str, ()> {
-    just('#')
-        .ignore_then(any().repeated())
-        .ignore_then(choice((text::newline().ignore_then(end()), end()))) // <-- this may or may not be totally useles
-        .ignored()
 }
 
 #[cfg(test)]
