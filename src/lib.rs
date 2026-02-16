@@ -156,6 +156,11 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
         .map(|(path, keywords)| Entry { path, keywords })
 }
 
+pub fn parse_entries<'src>() -> impl Parser<'src, &'src str, Vec<Entry>> {
+    parse_entry()
+        .separated_by(text::newline())
+        .at_least(1)
+        .collect::<Vec<_>>()
 }
 
 #[cfg(test)]
@@ -379,6 +384,72 @@ mod tests {
                     )
                 ]
             })
+        );
+    }
+
+    #[test]
+    fn test_parse_entries() {
+        let parse = |input| parse_entries().parse(input).into_result();
+
+        assert_eq!(
+            parse(
+                ".             type=dir size=320 time=1771023429.226137224
+                .gitignore  size=8 time=1769725259.452161299
+                Cargo.lock  size=13637 time=1769728676.006587414
+                Cargo.toml  size=114 time=1769728674.520418961
+                LICENSE     size=1066 time=1769784305.767405992
+                README.md   size=177 time=1769783557.896055811
+                "
+            ),
+            Ok(vec![
+                Entry {
+                    path: PathBuf::from("."),
+                    keywords: vec![
+                        Keyword::Type(Type::Dir),
+                        Keyword::Size(320),
+                        Keyword::Time(DateTime::from_timestamp(1771023429, 226137224).unwrap())
+                    ]
+                },
+                Entry {
+                    path: PathBuf::from(".gitignore"),
+                    keywords: vec![
+                        Keyword::Size(8),
+                        Keyword::Time(DateTime::from_timestamp(1769725259, 452161299).unwrap())
+                    ]
+                },
+                Entry {
+                    path: PathBuf::from("Cargo.lock"),
+                    keywords: vec![
+                        Keyword::Size(13637),
+                        Keyword::Time(DateTime::from_timestamp(1769728676, 6587414).unwrap())
+                    ]
+                },
+                Entry {
+                    path: PathBuf::from("Cargo.toml"),
+                    keywords: vec![
+                        Keyword::Size(114),
+                        Keyword::Time(DateTime::from_timestamp(1769728674, 520418961).unwrap())
+                    ]
+                },
+                Entry {
+                    path: PathBuf::from("LICENSE"),
+                    keywords: vec![
+                        Keyword::Size(1066),
+                        Keyword::Time(DateTime::from_timestamp(1769784305, 767405992).unwrap()),
+                        Keyword::Sha256(
+                            "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
+                                .to_string()
+                        )
+                    ]
+                },
+                Entry {
+                    path: PathBuf::from("README.md"),
+                    keywords: vec![
+                        Keyword::Size(177),
+                        Keyword::Time(DateTime::from_timestamp(1769783557, 896055811).unwrap())
+                    ]
+                }
+            ])
         );
     }
 }
