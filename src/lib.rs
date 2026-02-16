@@ -250,11 +250,15 @@ mod tests {
 
         assert_eq!(
             parse("time=1630456800.0"),
-            Ok(Keyword::Time(Timestamp::strptime("%s.%f", "1630456800.0").unwrap()))
+            Ok(Keyword::Time(
+                Timestamp::strptime("%s.%f", "1630456800.0").unwrap()
+            ))
         );
         assert_eq!(
             parse("time=1769640177.434772208"),
-            Ok(Keyword::Time(Timestamp::strptime("%s.%f", "1769640177.434772208").unwrap()))
+            Ok(Keyword::Time(
+                Timestamp::strptime("%s.%f", "1769640177.434772208").unwrap()
+            ))
         );
     }
 
@@ -423,28 +427,36 @@ mod tests {
                     keywords: vec![
                         Keyword::Type(Type::Dir),
                         Keyword::Size(320),
-                        Keyword::Time(Timestamp::strptime("%s.%f", "1771023429.226137224").unwrap())
+                        Keyword::Time(
+                            Timestamp::strptime("%s.%f", "1771023429.226137224").unwrap()
+                        )
                     ]
                 },
                 Entry {
                     path: PathBuf::from(".gitignore"),
                     keywords: vec![
                         Keyword::Size(8),
-                        Keyword::Time(Timestamp::strptime("%s.%f", "1769725259.452161299").unwrap())
+                        Keyword::Time(
+                            Timestamp::strptime("%s.%f", "1769725259.452161299").unwrap()
+                        )
                     ]
                 },
                 Entry {
                     path: PathBuf::from("Cargo.lock"),
                     keywords: vec![
                         Keyword::Size(13637),
-                        Keyword::Time(Timestamp::strptime("%s.%f", "1769728676.006587414").unwrap())
+                        Keyword::Time(
+                            Timestamp::strptime("%s.%f", "1769728676.006587414").unwrap()
+                        )
                     ]
                 },
                 Entry {
                     path: PathBuf::from("Cargo.toml"),
                     keywords: vec![
                         Keyword::Size(114),
-                        Keyword::Time(Timestamp::strptime("%s.%f", "1769728674.520418961").unwrap())
+                        Keyword::Time(
+                            Timestamp::strptime("%s.%f", "1769728674.520418961").unwrap()
+                        )
                     ]
                 },
                 Entry {
@@ -460,7 +472,9 @@ mod tests {
                     path: PathBuf::from("README.md"),
                     keywords: vec![
                         Keyword::Size(177),
-                        Keyword::Time(Timestamp::strptime("%s.%f", "1769783557.896055811").unwrap())
+                        Keyword::Time(
+                            Timestamp::strptime("%s.%f", "1769783557.896055811").unwrap()
+                        )
                     ]
                 }
             ])
