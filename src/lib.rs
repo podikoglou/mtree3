@@ -162,101 +162,73 @@ mod tests {
 
     #[test]
     fn test_parse_type() {
-        assert_eq!(parse_type().parse("block").into_result(), Ok(Type::Block));
-        assert_eq!(parse_type().parse("char").into_result(), Ok(Type::Char));
-        assert_eq!(parse_type().parse("dir").into_result(), Ok(Type::Dir));
-        assert_eq!(parse_type().parse("fifo").into_result(), Ok(Type::Fifo));
-        assert_eq!(parse_type().parse("file").into_result(), Ok(Type::File));
-        assert_eq!(parse_type().parse("link").into_result(), Ok(Type::Link));
-        assert_eq!(parse_type().parse("socket").into_result(), Ok(Type::Socket));
+        let parse = |input| parse_type().parse(input).into_result();
+
+        assert_eq!(parse("block"), Ok(Type::Block));
+        assert_eq!(parse("char"), Ok(Type::Char));
+        assert_eq!(parse("dir"), Ok(Type::Dir));
+        assert_eq!(parse("fifo"), Ok(Type::Fifo));
+        assert_eq!(parse("file"), Ok(Type::File));
+        assert_eq!(parse("link"), Ok(Type::Link));
+        assert_eq!(parse("socket"), Ok(Type::Socket));
     }
 
     #[test]
     fn test_parse_timestamp() {
+        let parse = |input| parse_timestamp().parse(input).into_result();
+
         assert_eq!(
-            parse_timestamp().parse("1630456800.0").into_result(),
+            parse("1630456800.0"),
             Ok(DateTime::from_timestamp(1630456800, 0).unwrap())
         );
         assert_eq!(
-            parse_timestamp()
-                .parse("1769640177.434772208")
-                .into_result(),
+            parse("1769640177.434772208"),
             Ok(DateTime::from_timestamp(1769640177, 434772208).unwrap())
         );
     }
 
     #[test]
     fn test_parse_path() {
-        assert_eq!(
-            parse_path().parse("foo.bar").into_result(),
-            Ok(PathBuf::from("foo.bar"))
-        );
-        assert_eq!(
-            parse_path().parse("../../foo.bar").into_result(),
-            Ok(PathBuf::from("../../foo.bar"))
-        );
+        let parse = |input| parse_path().parse(input).into_result();
+
+        assert_eq!(parse("foo.bar"), Ok(PathBuf::from("foo.bar")));
+        assert_eq!(parse("../../foo.bar"), Ok(PathBuf::from("../../foo.bar")));
     }
 
     #[test]
     fn test_parse_type_keyword() {
-        assert_eq!(
-            parse_keyword().parse("type=block").into_result(),
-            Ok(Keyword::Type(Type::Block))
-        );
-        assert_eq!(
-            parse_keyword().parse("type=char").into_result(),
-            Ok(Keyword::Type(Type::Char))
-        );
-        assert_eq!(
-            parse_keyword().parse("type=dir").into_result(),
-            Ok(Keyword::Type(Type::Dir))
-        );
-        assert_eq!(
-            parse_keyword().parse("type=fifo").into_result(),
-            Ok(Keyword::Type(Type::Fifo))
-        );
-        assert_eq!(
-            parse_keyword().parse("type=file").into_result(),
-            Ok(Keyword::Type(Type::File))
-        );
-        assert_eq!(
-            parse_keyword().parse("type=link").into_result(),
-            Ok(Keyword::Type(Type::Link))
-        );
-        assert_eq!(
-            parse_keyword().parse("type=socket").into_result(),
-            Ok(Keyword::Type(Type::Socket))
-        );
+        let parse = |input| parse_keyword().parse(input).into_result();
+
+        assert_eq!(parse("type=block"), Ok(Keyword::Type(Type::Block)));
+        assert_eq!(parse("type=char"), Ok(Keyword::Type(Type::Char)));
+        assert_eq!(parse("type=dir"), Ok(Keyword::Type(Type::Dir)));
+        assert_eq!(parse("type=fifo"), Ok(Keyword::Type(Type::Fifo)));
+        assert_eq!(parse("type=file"), Ok(Keyword::Type(Type::File)));
+        assert_eq!(parse("type=link"), Ok(Keyword::Type(Type::Link)));
+        assert_eq!(parse("type=socket"), Ok(Keyword::Type(Type::Socket)));
     }
 
     #[test]
     fn test_parse_uid_keyword() {
-        assert_eq!(
-            parse_keyword().parse("uid=0").into_result(),
-            Ok(Keyword::Uid(0))
-        );
-        assert_eq!(
-            parse_keyword().parse("uid=100").into_result(),
-            Ok(Keyword::Uid(100))
-        );
-        assert_eq!(
-            parse_keyword().parse("uid=123456789").into_result(),
-            Ok(Keyword::Uid(123456789))
-        );
+        let parse = |input| parse_keyword().parse(input).into_result();
+
+        assert_eq!(parse("uid=0"), Ok(Keyword::Uid(0)));
+        assert_eq!(parse("uid=100"), Ok(Keyword::Uid(100)));
+        assert_eq!(parse("uid=123456789"), Ok(Keyword::Uid(123456789)));
     }
 
     #[test]
     fn test_parse_timestamp_keyword() {
+        let parse = |input| parse_keyword().parse(input).into_result();
+
         assert_eq!(
-            parse_keyword().parse("time=1630456800.0").into_result(),
+            parse("time=1630456800.0"),
             Ok(Keyword::Time(
                 DateTime::from_timestamp(1630456800, 0).unwrap()
             ))
         );
         assert_eq!(
-            parse_keyword()
-                .parse("time=1769640177.434772208")
-                .into_result(),
+            parse("time=1769640177.434772208"),
             Ok(Keyword::Time(
                 DateTime::from_timestamp(1769640177, 434772208).unwrap()
             ))
@@ -265,36 +237,25 @@ mod tests {
 
     #[test]
     fn test_parse_size_keyword() {
-        assert_eq!(
-            parse_keyword().parse("size=0").into_result(),
-            Ok(Keyword::Size(0))
-        );
-        assert_eq!(
-            parse_keyword().parse("size=1024").into_result(),
-            Ok(Keyword::Size(1024))
-        );
-        assert_eq!(
-            parse_keyword().parse("size=1048576").into_result(),
-            Ok(Keyword::Size(1048576))
-        );
+        let parse = |input| parse_keyword().parse(input).into_result();
+
+        assert_eq!(parse("size=0"), Ok(Keyword::Size(0)));
+        assert_eq!(parse("size=1024"), Ok(Keyword::Size(1024)));
+        assert_eq!(parse("size=1048576"), Ok(Keyword::Size(1048576)));
     }
 
     #[test]
     fn test_parse_sha256_keyword() {
+        let parse = |input| parse_keyword().parse(input).into_result();
+
         assert_eq!(
-            parse_keyword()
-                .parse("sha256=fd9849d9364b9b9aabed88a8aa8e007d7450c3ad3a17aee0617dd24959464249")
-                .into_result(),
+            parse("sha256=fd9849d9364b9b9aabed88a8aa8e007d7450c3ad3a17aee0617dd24959464249"),
             Ok(Keyword::Sha256(
                 "fd9849d9364b9b9aabed88a8aa8e007d7450c3ad3a17aee0617dd24959464249".to_string()
             ))
         );
         assert_eq!(
-            parse_keyword()
-                .parse(
-                    "sha256digest=fd9849d9364b9b9aabed88a8aa8e007d7450c3ad3a17aee0617dd24959464249"
-                )
-                .into_result(),
+            parse("sha256digest=fd9849d9364b9b9aabed88a8aa8e007d7450c3ad3a17aee0617dd24959464249"),
             Ok(Keyword::Sha256(
                 "fd9849d9364b9b9aabed88a8aa8e007d7450c3ad3a17aee0617dd24959464249".to_string()
             ))
@@ -303,33 +264,32 @@ mod tests {
 
     #[test]
     fn test_parse_link_keyword() {
+        let parse = |input| parse_keyword().parse(input).into_result();
+
         assert_eq!(
-            parse_keyword().parse("link=../../foo.bar").into_result(),
+            parse("link=../../foo.bar"),
             Ok(Keyword::Link(PathBuf::from("../../foo.bar")))
         );
         assert_eq!(
-            parse_keyword().parse("link=./foo.bar").into_result(),
+            parse("link=./foo.bar"),
             Ok(Keyword::Link(PathBuf::from("./foo.bar")))
         );
         assert_eq!(
-            parse_keyword().parse("link=foo.bar").into_result(),
+            parse("link=foo.bar"),
             Ok(Keyword::Link(PathBuf::from("foo.bar")))
         );
     }
 
     #[test]
     fn test_parse_keywords() {
-        assert_eq!(parse_keywords().parse("").into_result(), Ok(vec![]));
+        let parse = |input| parse_keywords().parse(input).into_result();
+
+        assert_eq!(parse(""), Ok(vec![]));
+
+        assert_eq!(parse("type=dir"), Ok(vec![Keyword::Type(Type::Dir),]));
 
         assert_eq!(
-            parse_keywords().parse("type=dir").into_result(),
-            Ok(vec![Keyword::Type(Type::Dir),])
-        );
-
-        assert_eq!(
-            parse_keywords()
-                .parse("type=dir size=384 time=1769640373.412526597")
-                .into_result(),
+            parse("type=dir size=384 time=1769640373.412526597"),
             Ok(vec![
                 Keyword::Type(Type::Dir),
                 Keyword::Size(384),
@@ -338,9 +298,7 @@ mod tests {
         );
 
         assert_eq!(
-            parse_keywords()
-                .parse("type=link size=24 time=1769203307.589764008")
-                .into_result(),
+            parse("type=link size=24 time=1769203307.589764008"),
             Ok(vec![
                 Keyword::Type(Type::Link),
                 Keyword::Size(24),
@@ -349,24 +307,26 @@ mod tests {
         );
 
         assert_eq!(
-            parse_keywords()
-                .parse("size=10931 time=1769203027.452198079 \
-                                sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
-                .into_result(),
+            parse(
+                "size=10931 time=1769203027.452198079 \
+                                sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
+            ),
             Ok(vec![
                 Keyword::Size(10931),
                 Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
-                Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())
+                Keyword::Sha256(
+                    "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string()
+                )
             ])
         );
     }
 
     #[test]
     fn test_parse_commands() {
+        let parse = |input| parse_command().parse(input).into_result();
+
         assert_eq!(
-            parse_command()
-                .parse("/set type=dir size=384 time=1769640373.412526597")
-                .into_result(),
+            parse("/set type=dir size=384 time=1769640373.412526597"),
             Ok(Command::Set(vec![
                 Keyword::Type(Type::Dir),
                 Keyword::Size(384),
@@ -374,25 +334,24 @@ mod tests {
             ]))
         );
 
-        assert_eq!(
-            parse_command().parse("/unset").into_result(),
-            Ok(Command::Unset)
-        );
+        assert_eq!(parse("/unset"), Ok(Command::Unset));
     }
 
     #[test]
     fn test_parse_comment() {
-        assert_eq!(parse_comment().parse("#hello world").into_result(), Ok(()));
-        assert_eq!(parse_comment().parse("# hello world").into_result(), Ok(()));
-        assert_eq!(parse_comment().parse("#").into_result(), Ok(()));
+        let parse = |input| parse_comment().parse(input).into_result();
+
+        assert_eq!(parse("#hello world"), Ok(()));
+        assert_eq!(parse("# hello world"), Ok(()));
+        assert_eq!(parse("#"), Ok(()));
     }
 
     #[test]
     fn test_parse_entry() {
+        let parse = |input| parse_entry().parse(input).into_result();
+
         assert_eq!(
-            parse_entry()
-                .parse("    LICENSE     size=10931 time=1769203027.452198079")
-                .into_result(),
+            parse("    LICENSE     size=10931 time=1769203027.452198079"),
             Ok(Entry {
                 path: PathBuf::from("LICENSE"),
                 keywords: vec![
@@ -403,16 +362,19 @@ mod tests {
         );
 
         assert_eq!(
-            parse_entry()
-                .parse("    LICENSE     size=10931 time=1769203027.452198079 \
-                            sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff")
-                .into_result(),
+            parse(
+                "    LICENSE     size=10931 time=1769203027.452198079 \
+                            sha256digest=014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
+            ),
             Ok(Entry {
                 path: PathBuf::from("LICENSE"),
                 keywords: vec![
                     Keyword::Size(10931),
                     Keyword::Time(DateTime::from_timestamp(1769203027, 452198079).unwrap()),
-                    Keyword::Sha256("014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff".to_string())
+                    Keyword::Sha256(
+                        "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
+                            .to_string()
+                    )
                 ]
             })
         );
