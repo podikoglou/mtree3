@@ -40,13 +40,13 @@ pub type ParserError<'src> = extra::Err<Rich<'src, char>>;
 
 pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type, ParserError<'src>> {
     choice((
-        just("block").to(Type::Block),
-        just("char").to(Type::Char),
-        just("dir").to(Type::Dir),
-        just("fifo").to(Type::Fifo),
-        just("file").to(Type::File),
-        just("link").to(Type::Link),
-        just("socket").to(Type::Socket),
+        text::keyword("block").to(Type::Block),
+        text::keyword("char").to(Type::Char),
+        text::keyword("dir").to(Type::Dir),
+        text::keyword("fifo").to(Type::Fifo),
+        text::keyword("file").to(Type::File),
+        text::keyword("link").to(Type::Link),
+        text::keyword("socket").to(Type::Socket),
     ))
     .labelled("type")
 }
@@ -113,13 +113,16 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword, ParserErro
         .labelled("sha256 hash");
 
     choice((
-        keyword_parser(just("type"), type_value).map(Keyword::Type),
-        keyword_parser(just("uid"), number_u32).map(Keyword::Uid),
-        keyword_parser(just("time"), timestamp).map(Keyword::Time),
-        keyword_parser(just("size"), number_u64).map(Keyword::Size),
-        keyword_parser(choice((just("sha256digest"), just("sha256"))), sha256)
-            .map(|hash: &str| Keyword::Sha256(hash.to_string())),
-        keyword_parser(just("link"), path).map(|path: PathBuf| Keyword::Link(path)),
+        keyword_parser(text::keyword("type"), type_value).map(Keyword::Type),
+        keyword_parser(text::keyword("uid"), number_u32).map(Keyword::Uid),
+        keyword_parser(text::keyword("time"), timestamp).map(Keyword::Time),
+        keyword_parser(text::keyword("size"), number_u64).map(Keyword::Size),
+        keyword_parser(
+            choice((text::keyword("sha256digest"), text::keyword("sha256"))),
+            sha256,
+        )
+        .map(|hash: &str| Keyword::Sha256(hash.to_string())),
+        keyword_parser(text::keyword("link"), path).map(|path: PathBuf| Keyword::Link(path)),
     ))
 }
 
@@ -140,8 +143,8 @@ pub fn parse_keywords<'src>() -> impl Parser<'src, &'src str, Vec<Keyword>, Pars
 }
 
 pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command, ParserError<'src>> {
-    let unset = just("unset").to(Command::Unset);
-    let set = just("set")
+    let unset = text::keyword("unset").to(Command::Unset);
+    let set = text::keyword("set")
         .ignore_then(whitespace_with_continuation())
         .ignore_then(parse_keywords())
         .map(Command::Set);
