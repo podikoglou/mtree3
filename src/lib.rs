@@ -74,6 +74,13 @@ pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf> {
         .validate(|x: &str, _, _| PathBuf::from(x))
 }
 
+fn keyword_parser<'src, V>(
+    key: impl Parser<'src, &'src str, &'src str>,
+    value: impl Parser<'src, &'src str, V>,
+) -> impl Parser<'src, &'src str, V> {
+    key.ignore_then(just('=')).ignore_then(value)
+}
+
 pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
     let type_value = parse_type();
 
@@ -89,36 +96,19 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
 
     let path = parse_path();
 
+    let sha256 = one_of("0123456789abcdefABCDEF")
+        .repeated()
+        .at_least(1)
+        .to_slice();
+
     choice((
-        just("type")
-            .ignore_then(just("="))
-            .ignore_then(type_value)
-            .map(|ty| Keyword::Type(ty)),
-        just("uid")
-            .ignore_then(just("="))
-            .ignore_then(number_u32)
-            .map(|uid| Keyword::Uid(uid)),
-        just("time")
-            .ignore_then(just("="))
-            .ignore_then(timestamp)
-            .map(|time| Keyword::Time(time)),
-        just("size")
-            .ignore_then(just("="))
-            .ignore_then(number_u64)
-            .map(|size| Keyword::Size(size)),
-        choice((just("sha256digest"), just("sha256")))
-            .ignore_then(just("="))
-            .ignore_then(
-                one_of("0123456789abcdefABCDEF")
-                    .repeated()
-                    .at_least(1)
-                    .to_slice(),
-            )
-            .map(|sha256: &str| Keyword::Sha256(sha256.to_string())),
-        just("link")
-            .ignore_then(just("="))
-            .ignore_then(path)
-            .map(|path: PathBuf| Keyword::Link(path)),
+        keyword_parser(just("type"), type_value).map(Keyword::Type),
+        keyword_parser(just("uid"), number_u32).map(Keyword::Uid),
+        keyword_parser(just("time"), timestamp).map(Keyword::Time),
+        keyword_parser(just("size"), number_u64).map(Keyword::Size),
+        keyword_parser(choice((just("sha256digest"), just("sha256"))), sha256)
+            .map(|hash: &str| Keyword::Sha256(hash.to_string())),
+        keyword_parser(just("link"), path).map(|path: PathBuf| Keyword::Link(path)),
     ))
 }
 
