@@ -48,6 +48,7 @@ pub fn parse_type<'src>() -> impl Parser<'src, &'src str, Type, ParserError<'src
         just("link").to(Type::Link),
         just("socket").to(Type::Socket),
     ))
+    .labelled("type")
 }
 
 pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>, ParserError<'src>> {
@@ -62,6 +63,7 @@ pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, DateTime<Utc>, Pa
             DateTime::from_timestamp(secs, nsecs)
                 .ok_or_else(|| Rich::custom(span, "Can't parse timestamp"))
         })
+        .labelled("timestamp")
 }
 
 pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf, ParserError<'src>> {
@@ -70,13 +72,16 @@ pub fn parse_path<'src>() -> impl Parser<'src, &'src str, PathBuf, ParserError<'
         .at_least(1)
         .to_slice()
         .validate(|x: &str, _, _| PathBuf::from(x))
+        .labelled("path")
 }
 
 fn keyword_parser<'src, V>(
     key: impl Parser<'src, &'src str, &'src str, ParserError<'src>>,
     value: impl Parser<'src, &'src str, V, ParserError<'src>>,
 ) -> impl Parser<'src, &'src str, V, ParserError<'src>> {
-    key.ignore_then(just('=')).ignore_then(value)
+    key.ignore_then(just('='))
+        .ignore_then(value)
+        .labelled("keyword")
 }
 
 pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword, ParserError<'src>> {
@@ -92,7 +97,8 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword, ParserErro
     let sha256 = one_of("0123456789abcdefABCDEF")
         .repeated()
         .at_least(1)
-        .to_slice();
+        .to_slice()
+        .labelled("sha256 hash");
 
     choice((
         keyword_parser(just("type"), type_value).map(Keyword::Type),
@@ -131,6 +137,7 @@ pub fn parse_command<'src>() -> impl Parser<'src, &'src str, Command, ParserErro
     just('/')
         .ignore_then(choice((unset, set)))
         .then_ignore(end()) // <- not sure if this is needed, it may even break stuff
+        .labelled("command")
 }
 
 pub fn parse_comment<'src>() -> impl Parser<'src, &'src str, (), ParserError<'src>> {
@@ -147,6 +154,7 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry, ParserError<'s
     path.padded_by(whitespace_with_continuation())
         .then(keywords)
         .map(|(path, keywords)| Entry { path, keywords })
+        .labelled("entry")
 }
 
 pub fn parse_entries<'src>() -> impl Parser<'src, &'src str, Vec<Entry>, ParserError<'src>> {
