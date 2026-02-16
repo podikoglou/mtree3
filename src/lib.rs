@@ -55,6 +55,7 @@ pub fn parse_timestamp<'src>() -> impl Parser<'src, &'src str, Timestamp, Parser
     // NOTE: do we need to handle - for the first number? (since it's an i64)
     // let number = just('0').repeated().or_not().then(text::int(10)).to_slice();
 
+    // TODO: clean this up, this is horrid
     let number = choice((
         // example: 1111
         text::int(10).repeated().to_slice(),
