@@ -159,6 +159,13 @@ pub fn parse_entry<'src>() -> impl Parser<'src, &'src str, Entry> {
         .map(|(path, keywords)| Entry { path, keywords })
 }
 
+pub fn parse_comment<'src>() -> impl Parser<'src, &'src str, ()> {
+    just('#')
+        .ignore_then(any().repeated())
+        .ignore_then(choice((text::newline().ignore_then(end()), end()))) // <-- this may or may not be totally useles
+        .ignored()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -381,6 +388,13 @@ mod tests {
             parse_command().parse("/unset").into_result(),
             Ok(Command::Unset)
         );
+    }
+
+    #[test]
+    fn test_parse_comment() {
+        assert_eq!(parse_comment().parse("#hello world").into_result(), Ok(()));
+        assert_eq!(parse_comment().parse("# hello world").into_result(), Ok(()));
+        assert_eq!(parse_comment().parse("#").into_result(), Ok(()));
     }
 
     #[test]
