@@ -108,7 +108,12 @@ pub fn parse_keyword<'src>() -> impl Parser<'src, &'src str, Keyword> {
             .map(|size| Keyword::Size(size)),
         choice((just("sha256digest"), just("sha256")))
             .ignore_then(just("="))
-            .ignore_then(text::ident())
+            .ignore_then(
+                one_of("0123456789abcdefABCDEF")
+                    .repeated()
+                    .at_least(1)
+                    .to_slice(),
+            )
             .map(|sha256: &str| Keyword::Sha256(sha256.to_string())),
         just("link")
             .ignore_then(just("="))
