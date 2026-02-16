@@ -365,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commands() {
+    fn test_parse_commands() {
         assert_eq!(
             parse_command()
                 .parse("/set type=dir size=384 time=1769640373.412526597")
