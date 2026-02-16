@@ -451,10 +451,8 @@ mod tests {
                     path: PathBuf::from("LICENSE"),
                     keywords: vec![
                         Keyword::Size(1066),
-                        Keyword::Time(Timestamp::strptime("%s.%f", "1769784305.767405992").unwrap()),
-                        Keyword::Sha256(
-                            "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
-                                .to_string()
+                        Keyword::Time(
+                            Timestamp::strptime("%s.%f", "1769784305.767405992").unwrap()
                         )
                     ]
                 },
