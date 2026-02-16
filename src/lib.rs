@@ -380,36 +380,3 @@ mod tests {
         );
     }
 }
-
-// // fn parse<'a>() -> impl Parser<'a, &'a str, Vec<Entry>> {
-// // todo!()
-// // let keywords = keyword
-// //     .separated_by(text::whitespace())
-// //     .collect::<Vec<Keyword>>();
-
-// // let command = just('/').then(text::whitespace()).then(keywords);
-
-// // let file_name = text::ascii::ident().to_slice();
-
-// // // Example:
-// // // ```
-// // //     config      size=137 time=1769626398.992169554
-// // // ```
-// // let file_entry = file_name
-// //     .padded()
-// //     .then_ignore(text::whitespace())
-// //     .then(keywords)
-// //     .map(|(name, keywords): (String, Vec<Keyword>)| {});
-
-// // // Example:
-// // ```
-// // # ./.git
-// // .git            type=dir size=384 time=1769640373.412526597
-// //     COMMIT_EDITMSG \
-// //                 size=365 time=1769640373.411006676
-// //     HEAD        size=21 time=1769626398.993045847
-// //     config      size=137 time=1769626398.992169554
-// //     description size=73 time=1769626398.987281092
-// //     index       size=7790 time=1769640373.409695845
-// // ```
-// // }
