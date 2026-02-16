@@ -173,6 +173,7 @@ pub fn parse_entries<'src>() -> impl Parser<'src, &'src str, Vec<Entry>, ParserE
         .separated_by(text::newline())
         .at_least(1)
         .collect::<Vec<_>>()
+        .then_ignore(text::whitespace().or_not())
 }
 
 #[cfg(test)]
