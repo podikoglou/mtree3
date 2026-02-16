@@ -191,8 +191,11 @@ mod tests {
     fn test_parse_path() {
         let parse = |input| parse_path().parse(input).into_result();
 
+        assert_eq!(parse("."), Ok(PathBuf::from(".")));
         assert_eq!(parse("foo.bar"), Ok(PathBuf::from("foo.bar")));
         assert_eq!(parse("../../foo.bar"), Ok(PathBuf::from("../../foo.bar")));
+        assert_eq!(parse("3"), Ok(PathBuf::from("3")));
+        assert_eq!(parse("0.txt"), Ok(PathBuf::from("0.txt")));
     }
 
     #[test]
